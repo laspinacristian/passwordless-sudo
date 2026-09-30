@@ -16,10 +16,10 @@ do_uninstall() {
     # Serialize with activations and expiry services.
     exec 9>/run/passwordless-sudo.lock
     flock -x 9
-    for state in "$RUNTIME"/user-*.json; do
-        [[ -f "$state" ]] || continue
-        uid=${state##*/user-}
-        uid=${uid%.json}
+    # One rule file per active window, named user-<uid>.
+    for rule in "$RUNTIME"/user-*; do
+        uid=${rule##*/user-}
+        [[ -f "$rule" && $uid =~ ^[0-9]+$ ]] || continue
         user=$(getent passwd "$uid" | cut -d: -f1) || continue
         runuser -u "$user" -- sudo -K
     done
